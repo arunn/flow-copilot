@@ -3,6 +3,7 @@
   "name": "Pomodoro Extension",
   "description": "A Pomodoro timer extension to help you stay focused",
   "version": "1.0.0",
+  "permissions": ["storage"],
   "action": {
     "default_popup": "index.html",
     "default_icon": {
@@ -16,6 +17,5 @@
     "48": "logo192.png",
     "128": "logo192.png"
   },
-  "permissions": ["storage"],
   "background_color": "#ffffff"
 }
