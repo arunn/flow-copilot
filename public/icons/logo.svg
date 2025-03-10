@@ -1,28 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background Circle -->
-  <circle cx="256" cy="256" r="248" fill="#2563eb" fill-opacity="0.1" stroke="#2563eb" stroke-width="16"/>
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Main Circle with Off-White Background -->
+  <circle cx="64" cy="64" r="56" fill="#f8fafc"/>
   
-  <!-- Flow Path -->
-  <path d="M128 256C128 176 176 128 256 128C336 128 384 176 384 256" 
+  <!-- Outer Circle Border -->
+  <circle cx="64" cy="64" r="56" fill="none" stroke="#2563eb" stroke-width="5"/>
+  
+  <!-- Inner Circle -->
+  <circle cx="64" cy="64" r="44" fill="none" stroke="#2563eb" stroke-width="4"/>
+  
+  <!-- Flow Arrow - Made thicker and more visible -->
+  <path d="M40 64C40 50.7452 50.7452 40 64 40C77.2548 40 88 50.7452 88 64" 
         stroke="#2563eb" 
-        stroke-width="32" 
-        stroke-linecap="round"
-        fill="none">
-    <animate attributeName="d" 
-             dur="2s" 
-             repeatCount="indefinite" 
-             values="M128 256C128 176 176 128 256 128C336 128 384 176 384 256;
-                     M128 256C128 336 176 384 256 384C336 384 384 336 384 256;
-                     M128 256C128 176 176 128 256 128C336 128 384 176 384 256"/>
-  </path>
+        stroke-width="6" 
+        stroke-linecap="round"/>
   
-  <!-- Timer Marks -->
-  <line x1="256" y1="96" x2="256" y2="128" stroke="#2563eb" stroke-width="16" stroke-linecap="round"/>
-  <line x1="256" y1="384" x2="256" y2="416" stroke="#2563eb" stroke-width="16" stroke-linecap="round"/>
-  <line x1="96" y1="256" x2="128" y2="256" stroke="#2563eb" stroke-width="16" stroke-linecap="round"/>
-  <line x1="384" y1="256" x2="416" y2="256" stroke="#2563eb" stroke-width="16" stroke-linecap="round"/>
-  
-  <!-- Center Point -->
-  <circle cx="256" cy="256" r="24" fill="#2563eb"/>
+  <!-- Center Dot - Made larger -->
+  <circle cx="64" cy="64" r="8" fill="#2563eb"/>
 </svg> 
