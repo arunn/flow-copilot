@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "Pomodoro Extension",
-  "description": "A Pomodoro timer extension to help you stay focused",
+  "name": "FlowCoPilot",
+  "description": "Your intelligent companion for focused work sessions. Seamlessly manage your work-break cycles with this smart Pomodoro timer.",
   "version": "1.0.0",
   "permissions": ["storage"],
   "action": {

@@ -1,12 +1,13 @@
-# Pomodoro Chrome Extension
+# FlowCoPilot
 
-A Chrome extension that implements the Pomodoro Technique to help you stay focused and productive. The extension features a 25-minute work timer followed by a 5-minute break timer that cycles continuously.
+Your intelligent companion for focused work sessions. FlowCoPilot is a Chrome extension that implements the Pomodoro Technique to help you maintain peak productivity. It features an intelligent 25-minute work timer followed by a 5-minute break timer that cycles continuously, with state persistence across browser sessions.
 
 ## Features
 
-- 25-minute work timer
-- 5-minute break timer
+- 25-minute focused work sessions
+- 5-minute rejuvenating breaks
 - Automatic cycling between work and break periods
+- State persistence across browser sessions
 - Simple START/STOP controls
 - Clean and intuitive user interface
 
@@ -46,6 +47,7 @@ npm start
 - React
 - TypeScript
 - Chrome Extensions API
+- Chrome Storage API for state persistence
 
 ## License
 
