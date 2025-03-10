@@ -8,8 +8,10 @@ function App() {
     <div className="App">
       <header className="App-header">
         <div className="logo-container">
-          <img src="/icons/logo.svg" alt="FlowCoPilot Logo" className="app-logo" />
-          <h1>FlowCoPilot</h1>
+          <div className="logo-title">
+            <img src="/icons/logo.svg" alt="FlowCoPilot Logo" className="app-logo" />
+            <h1>FlowCoPilot</h1>
+          </div>
         </div>
         <Pomodoro />
       </header>

@@ -1,6 +1,7 @@
 .App {
   text-align: center;
   min-width: 400px;
+  padding-top: 0.2rem;
 }
 
 .App-logo {
@@ -16,7 +17,6 @@
 
 .App-header {
   background-color: #f8f9fa;
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -39,16 +39,19 @@
 }
 
 .logo-container {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.logo-title {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  margin-bottom: 2rem;
+  gap: 1rem;
 }
 
 .app-logo {
-  width: 120px;
-  height: 120px;
-  margin-bottom: 1rem;
+  width: 48px;
+  height: 48px;
 }
 
 h1 {
