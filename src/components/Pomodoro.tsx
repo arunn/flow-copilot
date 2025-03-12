@@ -54,6 +54,12 @@ const Pomodoro: React.FC = () => {
       lastUpdated: Date.now()
     };
     chrome.storage.local.set({ timerState });
+    
+    // Send timer update to background script
+    chrome.runtime.sendMessage({
+      type: 'TIMER_UPDATE',
+      timeLeft
+    });
   }, [timeLeft, isRunning, isWorkTime]);
 
   useEffect(() => {
