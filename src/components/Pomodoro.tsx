@@ -7,17 +7,40 @@ interface TimerState {
   lastUpdated: number;
 }
 
-const Pomodoro: React.FC = () => {
-  const WORK_TIME = 25 * 60; // 25 minutes in seconds
-  const BREAK_TIME = 5 * 60; // 5 minutes in seconds
+interface Settings {
+  workTime: number;
+  breakTime: number;
+}
 
-  const [timeLeft, setTimeLeft] = useState(WORK_TIME);
+const Pomodoro: React.FC = () => {
+  const DEFAULT_WORK_TIME = 25 * 60; // 25 minutes in seconds
+  const DEFAULT_BREAK_TIME = 5 * 60; // 5 minutes in seconds
+  
+  const [workTime, setWorkTime] = useState(DEFAULT_WORK_TIME);
+  const [breakTime, setBreakTime] = useState(DEFAULT_BREAK_TIME);
+  const [timeLeft, setTimeLeft] = useState<number | null>(null); // Initialize as null
   const [isRunning, setIsRunning] = useState(false);
   const [isWorkTime, setIsWorkTime] = useState(true);
+  const [isLoading, setIsLoading] = useState(true); // Add loading state
 
-  // Load saved state when component mounts
+  // Load saved settings and state when component mounts
   useEffect(() => {
-    chrome.storage.local.get(['timerState'], (result) => {
+    setIsLoading(true);
+    chrome.storage.local.get(['settings', 'timerState'], (result) => {
+      // Load settings if available
+      let newWorkTime = DEFAULT_WORK_TIME;
+      let newBreakTime = DEFAULT_BREAK_TIME;
+      
+      if (result.settings) {
+        const settings: Settings = result.settings;
+        newWorkTime = settings.workTime * 60; // Convert minutes to seconds
+        newBreakTime = settings.breakTime * 60; // Convert minutes to seconds
+        
+        setWorkTime(newWorkTime);
+        setBreakTime(newBreakTime);
+      }
+      
+      // Load timer state if available
       if (result.timerState) {
         const savedState: TimerState = result.timerState;
         const currentTime = Date.now();
@@ -30,7 +53,7 @@ const Pomodoro: React.FC = () => {
           if (newTimeLeft === 0) {
             // If timer would have ended, switch to the next phase
             setIsWorkTime(!savedState.isWorkTime);
-            setTimeLeft(savedState.isWorkTime ? BREAK_TIME : WORK_TIME);
+            setTimeLeft(savedState.isWorkTime ? newBreakTime : newWorkTime);
           } else {
             setTimeLeft(newTimeLeft);
             setIsWorkTime(savedState.isWorkTime);
@@ -41,14 +64,49 @@ const Pomodoro: React.FC = () => {
           setIsWorkTime(savedState.isWorkTime);
           setIsRunning(false);
         }
+      } else {
+        // No timer state, initialize with work time
+        setTimeLeft(newWorkTime);
+        setIsWorkTime(true);
       }
+      
+      setIsLoading(false);
     });
   }, []);
+
+  // Listen for settings changes
+  useEffect(() => {
+    const handleStorageChange = (changes: { [key: string]: chrome.storage.StorageChange }) => {
+      if (changes.settings) {
+        const newSettings: Settings = changes.settings.newValue;
+        const newWorkTime = newSettings.workTime * 60;
+        const newBreakTime = newSettings.breakTime * 60;
+        
+        setWorkTime(newWorkTime);
+        setBreakTime(newBreakTime);
+        
+        // If the timer is not running and we're in the corresponding phase, update the time left
+        if (!isRunning) {
+          if (isWorkTime) {
+            setTimeLeft(newWorkTime);
+          } else {
+            setTimeLeft(newBreakTime);
+          }
+        }
+      }
+    };
+    
+    chrome.storage.onChanged.addListener(handleStorageChange);
+    
+    return () => {
+      chrome.storage.onChanged.removeListener(handleStorageChange);
+    };
+  }, [isRunning, isWorkTime]);
 
   // Save state when component updates
   useEffect(() => {
     const timerState: TimerState = {
-      timeLeft,
+      timeLeft: timeLeft || 0,
       isRunning,
       isWorkTime,
       lastUpdated: Date.now()
@@ -58,7 +116,8 @@ const Pomodoro: React.FC = () => {
     // Send timer update to background script
     chrome.runtime.sendMessage({
       type: 'TIMER_UPDATE',
-      timeLeft
+      timeLeft,
+      isWorkTime
     });
   }, [timeLeft, isRunning, isWorkTime]);
 
@@ -68,12 +127,12 @@ const Pomodoro: React.FC = () => {
     if (isRunning) {
       timer = setInterval(() => {
         setTimeLeft((prevTime) => {
-          if (prevTime <= 1) {
+          if (prevTime && prevTime <= 1) {
             // Switch between work and break time
             setIsWorkTime((prev) => !prev);
-            return isWorkTime ? BREAK_TIME : WORK_TIME;
+            return isWorkTime ? breakTime : workTime;
           }
-          return prevTime - 1;
+          return prevTime ? prevTime - 1 : 0;
         });
       }, 1000);
     }
@@ -81,7 +140,7 @@ const Pomodoro: React.FC = () => {
     return () => {
       if (timer) clearInterval(timer);
     };
-  }, [isRunning, isWorkTime]);
+  }, [isRunning, isWorkTime, workTime, breakTime]);
 
   const handleStart = () => {
     setIsRunning(true);
@@ -89,6 +148,11 @@ const Pomodoro: React.FC = () => {
 
   const handleStop = () => {
     setIsRunning(false);
+  };
+
+  const handleRestart = () => {
+    setIsRunning(false);
+    setTimeLeft(isWorkTime ? workTime : breakTime);
   };
 
   const formatTime = (seconds: number): string => {
@@ -99,24 +163,36 @@ const Pomodoro: React.FC = () => {
 
   return (
     <div className="pomodoro-container">
-      <h2>{isWorkTime ? 'Work Time' : 'Break Time'}</h2>
-      <div className="timer">{formatTime(timeLeft)}</div>
-      <div className="controls">
-        <button 
-          onClick={handleStart} 
-          disabled={isRunning}
-          className="start-button"
-        >
-          START
-        </button>
-        <button 
-          onClick={handleStop} 
-          disabled={!isRunning}
-          className="stop-button"
-        >
-          STOP
-        </button>
-      </div>
+      {isLoading ? (
+        <div>Loading timer...</div>
+      ) : (
+        <>
+          <h2>{isWorkTime ? 'Work Time' : 'Break Time'}</h2>
+          <div className="timer">{formatTime(timeLeft || 0)}</div>
+          <div className="controls">
+            <button 
+              onClick={handleStart} 
+              disabled={isRunning}
+              className="start-button"
+            >
+              START
+            </button>
+            <button 
+              onClick={handleStop} 
+              disabled={!isRunning}
+              className="stop-button"
+            >
+              STOP
+            </button>
+            <button 
+              onClick={handleRestart}
+              className="restart-button"
+            >
+              RESTART
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 };
