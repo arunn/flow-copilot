@@ -110,7 +110,8 @@ const Pomodoro: React.FC = () => {
     // Send timer update to background script
     chrome.runtime.sendMessage({
       type: 'TIMER_UPDATE',
-      timeLeft
+      timeLeft,
+      isWorkTime
     });
   }, [timeLeft, isRunning, isWorkTime]);
 
