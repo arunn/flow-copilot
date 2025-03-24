@@ -70,4 +70,24 @@
 
 .save-button:hover {
   background-color: #27ae60;
+}
+
+/* Checkbox styling */
+.checkbox-group {
+  margin-top: 0.5rem;
+}
+
+.checkbox-group label {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  cursor: pointer;
+  font-weight: normal;
+}
+
+.checkbox-group input[type="checkbox"] {
+  margin-right: 10px;
+  cursor: pointer;
+  width: auto;
+  height: auto;
 } 

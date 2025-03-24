@@ -8,6 +8,7 @@ interface SettingsProps {
 const Settings: React.FC<SettingsProps> = ({ onBack }) => {
   const [workTime, setWorkTime] = useState(25);
   const [breakTime, setBreakTime] = useState(5);
+  const [soundEnabled, setSoundEnabled] = useState(true);
 
   useEffect(() => {
     // Load saved settings when component mounts
@@ -15,6 +16,11 @@ const Settings: React.FC<SettingsProps> = ({ onBack }) => {
       if (result.settings) {
         setWorkTime(result.settings.workTime);
         setBreakTime(result.settings.breakTime);
+        
+        // Load sound setting if available
+        if (result.settings.soundEnabled !== undefined) {
+          setSoundEnabled(result.settings.soundEnabled);
+        }
       }
     });
   }, []);
@@ -23,7 +29,8 @@ const Settings: React.FC<SettingsProps> = ({ onBack }) => {
     // Save settings to chrome storage
     const settings = {
       workTime,
-      breakTime
+      breakTime,
+      soundEnabled
     };
     chrome.storage.local.set({ settings }, () => {
       onBack(); // Navigate back to the main screen
@@ -62,6 +69,18 @@ const Settings: React.FC<SettingsProps> = ({ onBack }) => {
             value={breakTime}
             onChange={(e) => setBreakTime(parseInt(e.target.value) || 1)}
           />
+        </div>
+        
+        <div className="form-group checkbox-group">
+          <label htmlFor="soundEnabled">
+            <input
+              type="checkbox"
+              id="soundEnabled"
+              checked={soundEnabled}
+              onChange={(e) => setSoundEnabled(e.target.checked)}
+            />
+            Enable Sound Notifications
+          </label>
         </div>
         
         <button className="save-button" onClick={handleSave}>
