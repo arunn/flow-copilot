@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import './Pomodoro.css';
 
 interface TimerState {
   timeLeft: number;
@@ -10,6 +11,7 @@ interface TimerState {
 interface Settings {
   workTime: number;
   breakTime: number;
+  soundEnabled: boolean; // Sound enabled setting
 }
 
 const Pomodoro: React.FC = () => {
@@ -22,6 +24,7 @@ const Pomodoro: React.FC = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [isWorkTime, setIsWorkTime] = useState(true);
   const [isLoading, setIsLoading] = useState(true); // Add loading state
+  const [soundEnabled, setSoundEnabled] = useState(true); // Sound enabled by default
 
   // Load saved settings and state when component mounts
   useEffect(() => {
@@ -30,6 +33,7 @@ const Pomodoro: React.FC = () => {
       // Load settings if available
       let newWorkTime = DEFAULT_WORK_TIME;
       let newBreakTime = DEFAULT_BREAK_TIME;
+      let newSoundEnabled = true;
       
       if (result.settings) {
         const settings: Settings = result.settings;
@@ -38,6 +42,7 @@ const Pomodoro: React.FC = () => {
         
         setWorkTime(newWorkTime);
         setBreakTime(newBreakTime);
+        setSoundEnabled(settings.soundEnabled);
       }
       
       // Load timer state if available
@@ -54,11 +59,12 @@ const Pomodoro: React.FC = () => {
             // If timer would have ended, switch to the next phase
             setIsWorkTime(!savedState.isWorkTime);
             setTimeLeft(savedState.isWorkTime ? newBreakTime : newWorkTime);
+            setIsRunning(false);
           } else {
             setTimeLeft(newTimeLeft);
             setIsWorkTime(savedState.isWorkTime);
+            setIsRunning(true);
           }
-          setIsRunning(true);
         } else {
           setTimeLeft(savedState.timeLeft);
           setIsWorkTime(savedState.isWorkTime);
@@ -68,6 +74,7 @@ const Pomodoro: React.FC = () => {
         // No timer state, initialize with work time
         setTimeLeft(newWorkTime);
         setIsWorkTime(true);
+        setIsRunning(false);
       }
       
       setIsLoading(false);
@@ -84,6 +91,9 @@ const Pomodoro: React.FC = () => {
         
         setWorkTime(newWorkTime);
         setBreakTime(newBreakTime);
+        
+        // Update sound enabled setting if it changed
+        setSoundEnabled(newSettings.soundEnabled);
         
         // If the timer is not running and we're in the corresponding phase, update the time left
         if (!isRunning) {
@@ -128,6 +138,14 @@ const Pomodoro: React.FC = () => {
       timer = setInterval(() => {
         setTimeLeft((prevTime) => {
           if (prevTime && prevTime <= 1) {
+            // Timer completed - request background to play sound
+            if (soundEnabled) {
+              chrome.runtime.sendMessage({
+                type: 'PLAY_SOUND',
+                timerType: isWorkTime ? 'work' : 'break'
+              });
+            }
+            
             // Switch between work and break time
             setIsWorkTime((prev) => !prev);
             return isWorkTime ? breakTime : workTime;
@@ -140,7 +158,7 @@ const Pomodoro: React.FC = () => {
     return () => {
       if (timer) clearInterval(timer);
     };
-  }, [isRunning, isWorkTime, workTime, breakTime]);
+  }, [isRunning, isWorkTime, workTime, breakTime, soundEnabled]);
 
   const handleStart = () => {
     setIsRunning(true);
@@ -154,6 +172,7 @@ const Pomodoro: React.FC = () => {
     setIsRunning(false);
     setTimeLeft(isWorkTime ? workTime : breakTime);
   };
+
 
   const formatTime = (seconds: number): string => {
     const minutes = Math.floor(seconds / 60);
