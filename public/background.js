@@ -10,10 +10,16 @@ function formatTime(seconds) {
 }
 
 // Update badge with current time
-function updateBadge(timeLeft, isWorkTime, isRunning) {
+function updateBadge(timeLeft, isWorkTime) {
   chrome.action.setBadgeText({ text: formatTime(timeLeft) });
   chrome.action.setBadgeBackgroundColor({ color: isWorkTime ? '#ff0000' : '#008000' });
   chrome.action.setIcon({ path: 'icons/logo.png' });
+}
+
+function disableBadge() {
+  chrome.action.setBadgeText({ text: '-' });
+  chrome.action.setBadgeBackgroundColor({ color: '#94a3b8' });
+  chrome.action.setIcon({ path: 'icons/logo-disabled.png' });
 }
 
 // Flag to track if offscreen document is being created
@@ -114,7 +120,7 @@ chrome.runtime.onInstalled.addListener(() => {
       const currentTime = Date.now();
       const elapsedSeconds = Math.floor((currentTime - lastUpdated) / 1000);
       const newTimeLeft = Math.max(0, timeLeft - elapsedSeconds);
-      updateBadge(newTimeLeft, isWorkTime, isRunning);
+      updateBadge(newTimeLeft, isWorkTime);
       
       // Initialize previous values
       previousTimeLeft = newTimeLeft;
@@ -126,7 +132,7 @@ chrome.runtime.onInstalled.addListener(() => {
 // Listen for timer updates from popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'TIMER_UPDATE') {
-    updateBadge(message.timeLeft, message.isWorkTime, message.isRunning);
+    updateBadge(message.timeLeft, message.isWorkTime);
     
     // Update previous values
     previousTimeLeft = message.timeLeft;
@@ -156,10 +162,10 @@ chrome.alarms.onAlarm.addListener((alarm) => {
         const newTimeLeft = Math.max(0, timeLeft - elapsedSeconds);
         
         // Update badge
-        updateBadge(newTimeLeft, isWorkTime, isRunning);
+        updateBadge(newTimeLeft, isWorkTime);
         
         // Check if timer just completed (previousTimeLeft > 0 and newTimeLeft === 0)
-        if (previousTimeLeft > 0 && newTimeLeft === 0 && isRunning) {
+        if (previousTimeLeft > 0 && newTimeLeft === 0) {
           // Timer completed, play sound if enabled
           if (result.settings && result.settings.soundEnabled !== false) {
             playNotificationSound(isWorkTime ? 'work' : 'break');
@@ -188,6 +194,9 @@ chrome.alarms.onAlarm.addListener((alarm) => {
           previousTimeLeft = newTimeLeft;
           previousIsWorkTime = isWorkTime;
         }
+      }
+      else {
+        disableBadge();
       }
     });
   }
