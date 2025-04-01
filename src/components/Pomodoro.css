@@ -71,4 +71,4 @@ button:disabled {
 
 .restart-button:hover:not(:disabled) {
   background-color: #2980b9;
-} 
+}
