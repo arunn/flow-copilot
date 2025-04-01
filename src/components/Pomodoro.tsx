@@ -81,6 +81,12 @@ const Pomodoro: React.FC = () => {
     });
   }, []);
 
+  useEffect(() => {
+    if (!isRunning) {
+      chrome.runtime.sendMessage({ type: 'DISABLE_BADGE' });
+    }
+  }, [isRunning]);
+
   // Listen for settings changes
   useEffect(() => {
     const handleStorageChange = (changes: { [key: string]: chrome.storage.StorageChange }) => {
@@ -127,7 +133,8 @@ const Pomodoro: React.FC = () => {
     chrome.runtime.sendMessage({
       type: 'TIMER_UPDATE',
       timeLeft,
-      isWorkTime
+      isWorkTime,
+      isRunning
     });
   }, [timeLeft, isRunning, isWorkTime]);
 
@@ -148,6 +155,7 @@ const Pomodoro: React.FC = () => {
             
             // Switch between work and break time
             setIsWorkTime((prev) => !prev);
+            setIsRunning(false);
             return isWorkTime ? breakTime : workTime;
           }
           return prevTime ? prevTime - 1 : 0;

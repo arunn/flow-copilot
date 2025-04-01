@@ -10,10 +10,14 @@ function formatTime(seconds) {
 }
 
 // Update badge with current time
-function updateBadge(timeLeft, isWorkTime) {
-  chrome.action.setBadgeText({ text: formatTime(timeLeft) });
-  chrome.action.setBadgeBackgroundColor({ color: isWorkTime ? '#ff0000' : '#008000' });
-  chrome.action.setIcon({ path: 'icons/logo.png' });
+function updateBadge(timeLeft, isWorkTime, isRunning) {
+  if (isRunning) {
+    chrome.action.setBadgeText({ text: formatTime(timeLeft) });
+    chrome.action.setBadgeBackgroundColor({ color: isWorkTime ? '#ff0000' : '#008000' });
+    chrome.action.setIcon({ path: 'icons/logo.png' });
+  } else {
+    disableBadge();
+  }
 }
 
 function disableBadge() {
@@ -101,7 +105,6 @@ async function playNotificationSound(type) {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.target === 'background' && message.type === 'OFFSCREEN_CLOSED') {
     // Offscreen document was closed
-    console.log('Received confirmation that offscreen document closed');
     hasOffscreenDocument = false;
   }
   // Always return false for non-async responses
@@ -120,7 +123,7 @@ chrome.runtime.onInstalled.addListener(() => {
       const currentTime = Date.now();
       const elapsedSeconds = Math.floor((currentTime - lastUpdated) / 1000);
       const newTimeLeft = Math.max(0, timeLeft - elapsedSeconds);
-      updateBadge(newTimeLeft, isWorkTime);
+      updateBadge(newTimeLeft, isWorkTime, isRunning);
       
       // Initialize previous values
       previousTimeLeft = newTimeLeft;
@@ -132,7 +135,7 @@ chrome.runtime.onInstalled.addListener(() => {
 // Listen for timer updates from popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'TIMER_UPDATE') {
-    updateBadge(message.timeLeft, message.isWorkTime);
+    updateBadge(message.timeLeft, message.isWorkTime, message.isRunning);
     
     // Update previous values
     previousTimeLeft = message.timeLeft;
@@ -149,6 +152,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   return false;
 });
 
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'DISABLE_BADGE') {
+    disableBadge();
+  }
+  return false;
+});
+
 // Set up alarm for timer updates every second
 chrome.alarms.create('timerUpdate', { periodInMinutes: 1/60 });
 
@@ -162,7 +172,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
         const newTimeLeft = Math.max(0, timeLeft - elapsedSeconds);
         
         // Update badge
-        updateBadge(newTimeLeft, isWorkTime);
+        updateBadge(newTimeLeft, isWorkTime, isRunning);
         
         // Check if timer just completed (previousTimeLeft > 0 and newTimeLeft === 0)
         if (previousTimeLeft > 0 && newTimeLeft === 0) {
@@ -170,6 +180,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
           if (result.settings && result.settings.soundEnabled !== false) {
             playNotificationSound(isWorkTime ? 'work' : 'break');
           }
+          disableBadge();
           
           // Update timer state to switch between work/break time
           const newIsWorkTime = !isWorkTime;
