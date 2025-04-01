@@ -8,7 +8,6 @@ function initAudioContext() {
   if (!audioContext) {
     try {
       audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      console.log('Audio context initialized');
     } catch (err) {
       console.error('Failed to initialize audio context:', err);
     }
@@ -66,8 +65,6 @@ function playWorkCompletionSound(context) {
     oscillator2.start(now + 0.7);
     oscillator2.stop(now + 1.2);
     
-    console.log('Work completion sound played successfully');
-    
     // Return the duration of the sound
     return 1.3; // seconds
   } catch (err) {
@@ -105,9 +102,7 @@ function playBreakCompletionSound(context) {
     
     oscillator.start(now);
     oscillator.stop(now + 0.8);
-    
-    console.log('Break completion sound played successfully');
-    
+        
     // Return the duration of the sound
     return 0.9; // seconds
   } catch (err) {
@@ -151,9 +146,7 @@ function playNotificationSound(type) {
 function closeAfterSound(duration) {
   const buffer = 500; // Additional buffer time in ms
   const totalDelay = duration * 1000 + buffer;
-  
-  console.log(`Scheduling offscreen document close in ${totalDelay}ms`);
-  
+    
   setTimeout(() => {
     try {
       // Notify background script before closing
@@ -178,11 +171,9 @@ function closeAfterSound(duration) {
 
 // Listen for messages from the service worker
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log('Offscreen document received message:', message);
   
   // Only handle messages targeted to this offscreen document
   if (message.target === 'offscreen' && message.type === 'PLAY_SOUND') {
-    console.log('Playing sound:', message.soundType);
     
     // Play the requested sound and get duration
     const duration = playNotificationSound(message.soundType);
@@ -202,5 +193,4 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 document.addEventListener('DOMContentLoaded', () => {
   // Initialize audio context
   initAudioContext();
-  console.log('Offscreen document ready for audio playback');
 }); 

@@ -1,3 +1,5 @@
+/* ********** Helpers Section ********** */
+
 function formatTime(seconds) {
   const minutes = Math.round(seconds / 60);
   const remainingSeconds = seconds % 60;
@@ -25,6 +27,11 @@ function disableBadge() {
   chrome.action.setBadgeBackgroundColor({ color: '#94a3b8' });
   chrome.action.setIcon({ path: 'icons/logo-disabled.png' });
 }
+
+/* ********** End of Helpers Section ********** */
+
+
+/* ********** Offscreen & Audio Section ********** */
 
 // Flag to track if offscreen document is being created
 let creatingOffscreen = false;
@@ -54,7 +61,6 @@ async function setupOffscreenDocument() {
     });
     
     hasOffscreenDocument = true;
-    console.log('Offscreen document created successfully');
   } catch (err) {
     console.error('Error creating offscreen document:', err);
     // If there's a "duplicate" error, the document might already exist
@@ -81,7 +87,6 @@ async function playNotificationSound(type) {
           type: 'PLAY_SOUND',
           soundType: type
         });
-        console.log('Sound message sent to offscreen document');
       } catch (err) {
         // Handle specific error about receiving end not existing
         if (err.message && err.message.includes('receiving end does not exist')) {
@@ -94,7 +99,7 @@ async function playNotificationSound(type) {
         }
       }
     } else {
-      console.log('No offscreen document available for sound playback');
+      console.error('No offscreen document available for sound playback');
     }
   } catch (error) {
     console.error('Error playing notification sound:', error);
@@ -111,9 +116,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   return false;
 });
 
+/* ********** End of Offscreen & Audio Section ********** */
+
+
+/* ********** Timer Section ********** */
+
 // Track previous time to detect timer completion
 let previousTimeLeft = null;
-let previousIsWorkTime = null;
 
 // Initialize timer state
 chrome.runtime.onInstalled.addListener(() => {
@@ -127,35 +136,33 @@ chrome.runtime.onInstalled.addListener(() => {
       
       // Initialize previous values
       previousTimeLeft = newTimeLeft;
-      previousIsWorkTime = isWorkTime;
     }
   });
 });
 
 // Listen for timer updates from popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.type === 'TIMER_UPDATE') {
-    updateBadge(message.timeLeft, message.isWorkTime, message.isRunning);
-    
-    // Update previous values
-    previousTimeLeft = message.timeLeft;
-    previousIsWorkTime = message.isWorkTime;
-  } else if (message.type === 'PLAY_SOUND') {
-    // Directly play a sound when requested by the popup
-    chrome.storage.local.get(['settings'], (result) => {
-      if (result.settings && result.settings.soundEnabled !== false) {
-        playNotificationSound(message.timerType);
-      }
-    });
+  switch (message.type) {
+    case 'TIMER_UPDATE':
+      updateBadge(message.timeLeft, message.isWorkTime, message.isRunning);
+      // Update previous values
+      previousTimeLeft = message.timeLeft;
+      break;
+    case 'PLAY_SOUND':
+      // Directly play a sound when requested by the popup
+      chrome.storage.local.get(['settings'], (result) => {
+        if (result.settings && result.settings.soundEnabled !== false) {
+          playNotificationSound(message.timerType);
+        }
+      });
+      break;
+    case 'DISABLE_BADGE':
+      disableBadge();
+      break;
+    default:
+      break;
   }
   // Always return false for non-async responses
-  return false;
-});
-
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.type === 'DISABLE_BADGE') {
-    disableBadge();
-  }
   return false;
 });
 
@@ -199,11 +206,9 @@ chrome.alarms.onAlarm.addListener((alarm) => {
           
           // Update previous values
           previousTimeLeft = newTimerDuration;
-          previousIsWorkTime = newIsWorkTime;
         } else {
           // Just update previous values
           previousTimeLeft = newTimeLeft;
-          previousIsWorkTime = isWorkTime;
         }
       }
       else {
@@ -212,3 +217,5 @@ chrome.alarms.onAlarm.addListener((alarm) => {
     });
   }
 }); 
+
+/* ********** End of Timer Section ********** */
