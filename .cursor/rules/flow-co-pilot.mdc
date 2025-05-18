@@ -1,0 +1,147 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Cursor Rules for FlowCoPilot Chrome Extension
+
+## Project Context
+
+FlowCoPilot is a Chrome extension implementing the Pomodoro Technique for productivity. It features a 25-minute work timer, 5-minute break timer, automatic cycling, persistent state, offscreen audio notifications, and a settings UI. The extension is built with React and TypeScript, using Chrome Extension Manifest V3, and leverages the Chrome Storage and Alarms APIs.
+
+---
+
+## Code Style and Structure
+
+- Use concise, technical TypeScript/JavaScript with modern best practices.
+- Prefer functional programming patterns; minimize use of classes.
+- Use descriptive variable names (e.g., `isWorkTime`, `soundEnabled`, `timeLeft`).
+- Structure files as follows:
+  - `manifest.json` (in `public/`)
+  - Background script: `background.js` (in `public/`)
+  - Offscreen audio: `offscreen.js` and `offscreen.html` (in `public/`)
+  - React popup UI: `src/components/Pomodoro.tsx`, `src/components/Settings.tsx`
+  - Styles: CSS files colocated with components
+  - Entry: `src/index.tsx`, `src/App.tsx`
+- Use interfaces for message structures and settings (e.g., `TimerState`, `Settings`).
+
+---
+
+## Naming Conventions
+
+- Use lowercase with underscores for file names (e.g., `background.js`, `offscreen.js`).
+- Use camelCase for function and variable names.
+- Use PascalCase for React component names.
+- Use descriptive names for Chrome storage keys (e.g., `timerState`, `settings`).
+
+---
+
+## TypeScript Usage
+
+- Use TypeScript for all React components and logic.
+- Define interfaces for timer state, settings, and message payloads.
+- Use union types and type guards for runtime checks (e.g., message types).
+
+---
+
+## Extension Architecture
+
+- **Popup UI**: Built with React, provides timer controls and settings navigation.
+- **Settings UI**: Allows user to configure work/break durations and sound notifications.
+- **Background Script**: Handles timer logic, badge updates, and message passing.
+- **Offscreen Document**: Used for audio playback (work/break completion sounds) via the Offscreen API.
+- **State Management**: Use `chrome.storage.local` for persisting timer state and settings.
+- **Message Passing**: Use `chrome.runtime.sendMessage` for communication between popup, background, and offscreen scripts.
+- **Alarms**: Use `chrome.alarms` for timer ticks (every second).
+
+---
+
+## Manifest and Permissions
+
+- Use Manifest V3.
+- Only request necessary permissions: `"storage"`, `"alarms"`, `"offscreen"`.
+- Use `"web_accessible_resources"` for offscreen audio files.
+- Set a strict Content Security Policy (CSP) for extension pages.
+- Use `"action"` for popup and badge.
+
+---
+
+## Security and Privacy
+
+- Enforce CSP in `manifest.json`.
+- Use HTTPS for all network requests (if any).
+- Sanitize and validate all user input in settings.
+- Handle all Chrome API errors gracefully and log them.
+- Do not persist sensitive data.
+
+---
+
+## UI and Styling
+
+- Use responsive layouts for popup and settings (CSS Grid/Flexbox).
+- Ensure consistent styling across all UI elements.
+- Provide clear feedback for timer state and settings changes.
+- Use accessible controls and labels.
+
+---
+
+## Performance Optimization
+
+- Use event-driven background scripts (service worker, not persistent).
+- Minimize resource usage in background and offscreen scripts.
+- Use `chrome.alarms` instead of `setInterval` for timer ticks.
+- Only create offscreen document when needed for audio playback.
+- Clean up offscreen document after sound playback.
+
+---
+
+## Browser API Usage
+
+- Use `chrome.storage.local` for state and settings.
+- Use `chrome.alarms` for timer scheduling.
+- Use `chrome.action` for badge and icon updates.
+- Use `chrome.runtime.sendMessage` for inter-script communication.
+- Use `chrome.offscreen` for audio playback (with fallback/error handling).
+
+---
+
+## Cross-browser Compatibility
+
+- Use WebExtensions API patterns for future cross-browser support.
+- Gracefully degrade if APIs (e.g., Offscreen) are unavailable.
+
+---
+
+## Testing and Debugging
+
+- Use Chrome DevTools for debugging popup, background, and offscreen scripts.
+- Implement unit tests for core timer and settings logic (where feasible).
+- Use Chrome's extension loader for manual testing during development.
+
+---
+
+## Project-Specific Quirks and Features
+
+- **Offscreen Audio**: Audio notifications are played using an offscreen document (`offscreen.html` + `offscreen.js`). The background script manages the lifecycle of the offscreen document and handles duplicate/cleanup scenarios.
+- **Timer State Persistence**: Timer state (including time left, running status, and phase) is persisted in `chrome.storage.local` and restored on extension reload or browser restart.
+- **Settings Sync**: Settings changes (work/break duration, sound enabled) are immediately reflected in the timer and persisted.
+- **Badge Updates**: The extension badge shows the remaining time and changes color based on work/break phase. Badge is disabled when timer is stopped.
+- **Sound Control**: Users can enable/disable sound notifications in settings. Sound is only played if enabled.
+- **Automatic Phase Switching**: When a timer completes, the extension automatically switches between work and break phases, updating state and UI accordingly.
+- **Graceful Error Handling**: All Chrome API calls are wrapped with error handling and logging, especially for offscreen and message passing quirks.
+- **No Content Scripts**: The extension does not inject content scripts; all logic is contained in popup, background, and offscreen scripts.
+
+---
+
+## Code Output
+
+- Always output the entire file content, not just new or modified parts.
+- Include all necessary imports, declarations, and surrounding code to ensure the file is complete and functional.
+- Provide comments or explanations for significant changes or additions within the file.
+- If the file is too large to reasonably include in full, provide the most relevant complete section and clearly indicate where it fits in the larger file structure.
+
+---
+
+## Reference
+
+- Follow Chrome Extension documentation for best practices, security guidelines, and API usage.
