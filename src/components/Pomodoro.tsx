@@ -176,11 +176,33 @@ const Pomodoro: React.FC = () => {
     setIsRunning(false);
   };
 
-  const handleRestart = () => {
-    setIsRunning(false);
-    setTimeLeft(isWorkTime ? workTime : breakTime);
+  const handleRestartWork = () => {
+    chrome.runtime.sendMessage({ type: 'RESTART_WORK' }, (response) => {
+      if (response && typeof response.timeLeft === 'number') {
+        setTimeLeft(response.timeLeft);
+        setIsWorkTime(true);
+        setIsRunning(true);
+      } else {
+        setIsRunning(true);
+        setIsWorkTime(true);
+        setTimeLeft(workTime);
+      }
+    });
   };
 
+  const handleRestartBreak = () => {
+    chrome.runtime.sendMessage({ type: 'RESTART_BREAK' }, (response) => {
+      if (response && typeof response.timeLeft === 'number') {
+        setTimeLeft(response.timeLeft);
+        setIsWorkTime(false);
+        setIsRunning(true);
+      } else {
+        setIsRunning(true);
+        setIsWorkTime(false);
+        setTimeLeft(breakTime);
+      }
+    });
+  };
 
   const formatTime = (seconds: number): string => {
     const minutes = Math.floor(seconds / 60);
@@ -212,10 +234,16 @@ const Pomodoro: React.FC = () => {
               STOP
             </button>
             <button 
-              onClick={handleRestart}
-              className="restart-button"
+              onClick={handleRestartWork}
+              className="restart-work-button"
             >
-              RESTART
+              RESTART WORK
+            </button>
+            <button 
+              onClick={handleRestartBreak}
+              className="restart-break-button"
+            >
+              RESTART BREAK
             </button>
           </div>
         </>

@@ -28,6 +28,24 @@ function disableBadge() {
   chrome.action.setIcon({ path: 'icons/logo-disabled.png' });
 }
 
+function setPreviousTimeLeft(timeLeft) {
+  previousTimeLeft = timeLeft;
+}
+
+function restartMode(timeLeft, isWorkTime, sendResponse) {
+  const newTimerState = {
+    timeLeft: timeLeft,
+    isRunning: false,
+    isWorkTime: isWorkTime,
+    lastUpdated: Date.now()
+  }
+  chrome.storage.local.set({ timerState: newTimerState }, () => {
+    updateBadge(timeLeft, isWorkTime, false);
+    setPreviousTimeLeft(timeLeft);
+    sendResponse({ timeLeft: timeLeft, isWorkTime: isWorkTime });
+  });
+}
+
 /* ********** End of Helpers Section ********** */
 
 
@@ -159,6 +177,24 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     case 'DISABLE_BADGE':
       disableBadge();
       break;
+    case 'RESTART_WORK':
+      chrome.storage.local.get(['settings'], (result) => {
+        let workTime = 25 * 60;
+        if (result.settings && typeof result.settings.workTime === 'number') {
+          workTime = result.settings.workTime * 60;
+        }
+        restartMode(workTime, true, sendResponse);
+      });
+      return true;
+    case 'RESTART_BREAK':
+      chrome.storage.local.get(['settings'], (result) => {
+        let breakTime = 5 * 60;
+        if (result.settings && typeof result.settings.breakTime === 'number') {
+          breakTime = result.settings.breakTime * 60;
+        }
+        restartMode(breakTime, false, sendResponse);
+      });
+      return true;
     default:
       break;
   }
