@@ -216,7 +216,7 @@ const Pomodoro: React.FC = () => {
         <div>Loading timer...</div>
       ) : (
         <>
-          <h2>{isWorkTime ? 'Work Time' : 'Break Time'}</h2>
+          <h2>{isWorkTime ? "You're Working" : "You're on Break"}</h2>
           <div className="timer">{formatTime(timeLeft || 0)}</div>
           <div className="controls">
             <button 
@@ -231,19 +231,19 @@ const Pomodoro: React.FC = () => {
               disabled={!isRunning}
               className="stop-button"
             >
-              STOP
+              PAUSE
             </button>
             <button 
               onClick={handleRestartWork}
               className="restart-work-button"
             >
-              RESTART WORK
+              FORCE WORK
             </button>
             <button 
               onClick={handleRestartBreak}
               className="restart-break-button"
             >
-              RESTART BREAK
+              FORCE BREAK
             </button>
           </div>
         </>

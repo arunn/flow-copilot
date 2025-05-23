@@ -25,13 +25,15 @@ h2 {
 }
 
 .controls {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 0.5rem;
-  flex-wrap: wrap;
+  width: 100%;
   justify-content: center;
+  align-items: center;
 }
 
-button {
+.pomodoro-container button {
   padding: .4rem 0.6rem;
   font-size: 0.9rem;
   border: none;
@@ -39,9 +41,10 @@ button {
   cursor: pointer;
   transition: all 0.3s ease;
   font-weight: bold;
+  width: 100%;
 }
 
-button:disabled {
+.pomodoro-container button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
@@ -64,11 +67,11 @@ button:disabled {
   background-color: #c0392b;
 }
 
-.restart-button {
+.restart-work-button, .restart-break-button {
   background-color: #3498db;
   color: white;
 }
 
-.restart-button:hover:not(:disabled) {
+.restart-work-button:hover:not(:disabled), .restart-break-button:hover:not(:disabled) {
   background-color: #2980b9;
 }

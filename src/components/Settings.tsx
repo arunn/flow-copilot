@@ -47,8 +47,8 @@ const Settings: React.FC<SettingsProps> = ({ onBack }) => {
       </div>
       
       <div className="settings-form">
-        <div className="form-group">
-          <label htmlFor="workTime">Work Time (minutes):</label>
+        <div className="form-group time-input-group single-line-group">
+          <label htmlFor="workTime" className="single-line-label">Work Time (minutes):</label>
           <input
             type="number"
             id="workTime"
@@ -56,11 +56,12 @@ const Settings: React.FC<SettingsProps> = ({ onBack }) => {
             max="60"
             value={workTime}
             onChange={(e) => setWorkTime(parseInt(e.target.value) || 1)}
+            className="single-line-input"
           />
         </div>
         
-        <div className="form-group">
-          <label htmlFor="breakTime">Break Time (minutes):</label>
+        <div className="form-group time-input-group single-line-group">
+          <label htmlFor="breakTime" className="single-line-label">Break Time (minutes):</label>
           <input
             type="number"
             id="breakTime"
@@ -68,6 +69,7 @@ const Settings: React.FC<SettingsProps> = ({ onBack }) => {
             max="30"
             value={breakTime}
             onChange={(e) => setBreakTime(parseInt(e.target.value) || 1)}
+            className="single-line-input"
           />
         </div>
         
