@@ -14,10 +14,11 @@ interface Settings {
   soundEnabled: boolean; // Sound enabled setting
 }
 
+const DEFAULT_WORK_TIME = 25 * 60; // 25 minutes in seconds
+const DEFAULT_BREAK_TIME = 5 * 60; // 5 minutes in seconds
+
+
 const Pomodoro: React.FC = () => {
-  const DEFAULT_WORK_TIME = 25 * 60; // 25 minutes in seconds
-  const DEFAULT_BREAK_TIME = 5 * 60; // 5 minutes in seconds
-  
   const [workTime, setWorkTime] = useState(DEFAULT_WORK_TIME);
   const [breakTime, setBreakTime] = useState(DEFAULT_BREAK_TIME);
   const [timeLeft, setTimeLeft] = useState<number | null>(null); // Initialize as null
@@ -33,7 +34,6 @@ const Pomodoro: React.FC = () => {
       // Load settings if available
       let newWorkTime = DEFAULT_WORK_TIME;
       let newBreakTime = DEFAULT_BREAK_TIME;
-      let newSoundEnabled = true;
       
       if (result.settings) {
         const settings: Settings = result.settings;

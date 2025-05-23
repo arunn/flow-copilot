@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './Settings.css';
+import { WeekSchedule } from '../types/schedule';
+import WorkSchedule from './WorkSchedule';
 
 interface SettingsProps {
   onBack: () => void;
@@ -9,7 +11,15 @@ const Settings: React.FC<SettingsProps> = ({ onBack }) => {
   const [workTime, setWorkTime] = useState(25);
   const [breakTime, setBreakTime] = useState(5);
   const [soundEnabled, setSoundEnabled] = useState(true);
-
+  const [schedule, setSchedule] = useState<WeekSchedule>({
+    monday: { enabled: true, timeRanges: [{ startTime: "09:00", endTime: "17:00" }] },
+    tuesday: { enabled: true, timeRanges: [{ startTime: "09:00", endTime: "17:00" }] },
+    wednesday: { enabled: true, timeRanges: [{ startTime: "09:00", endTime: "17:00" }] },
+    thursday: { enabled: true, timeRanges: [{ startTime: "09:00", endTime: "17:00" }] },
+    friday: { enabled: true, timeRanges: [{ startTime: "09:00", endTime: "17:00" }] },
+    saturday: { enabled: true, timeRanges: [{ startTime: "09:00", endTime: "17:00" }] },
+    sunday: { enabled: true, timeRanges: [{ startTime: "09:00", endTime: "17:00" }] }
+  });
   useEffect(() => {
     // Load saved settings when component mounts
     chrome.storage.local.get(['settings'], (result) => {
@@ -18,8 +28,12 @@ const Settings: React.FC<SettingsProps> = ({ onBack }) => {
         setBreakTime(result.settings.breakTime);
         
         // Load sound setting if available
-        if (result.settings.soundEnabled !== undefined) {
+        if (result.settings.soundEnabled) {
           setSoundEnabled(result.settings.soundEnabled);
+        }
+
+        if(result.settings.schedule) {
+          setSchedule(result.settings.schedule);
         }
       }
     });
@@ -30,7 +44,8 @@ const Settings: React.FC<SettingsProps> = ({ onBack }) => {
     const settings = {
       workTime,
       breakTime,
-      soundEnabled
+      soundEnabled,
+      schedule
     };
     chrome.storage.local.set({ settings }, () => {
       onBack(); // Navigate back to the main screen
@@ -84,7 +99,12 @@ const Settings: React.FC<SettingsProps> = ({ onBack }) => {
             Enable Sound Notifications
           </label>
         </div>
-        
+        <div className="form-group schedule-form-group">
+            <WorkSchedule 
+              schedule={schedule}
+              onScheduleChange={setSchedule}
+            />
+        </div>
         <button className="save-button" onClick={handleSave}>
           Save
         </button>

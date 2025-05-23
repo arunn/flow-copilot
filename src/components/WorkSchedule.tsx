@@ -57,7 +57,7 @@ const WorkSchedule: React.FC<WorkScheduleProps> = ({ schedule, onScheduleChange 
     // Don't remove if it's the only time range
     if (schedule[day].timeRanges.length <= 1) return;
     
-    const updatedRanges = schedule[day].timeRanges.filter((_, idx) => idx !== rangeIndex);
+    const updatedRanges = schedule[day].timeRanges.filter((_: TimeRange, idx: number) => idx !== rangeIndex);
     
     onScheduleChange({
       ...schedule,
@@ -92,16 +92,16 @@ const WorkSchedule: React.FC<WorkScheduleProps> = ({ schedule, onScheduleChange 
           </p>
           
           {(Object.keys(schedule) as Array<keyof WeekSchedule>).map((day) => (
-            <div key={day} className="day-schedule">
+            <div key={String(day)} className="day-schedule">
               <div className="day-header">
-                <label htmlFor={`day-${day}`} className="day-label">
+                <label htmlFor={`day-${String(day)}`} className="day-label">
                   <input
                     type="checkbox"
-                    id={`day-${day}`}
+                    id={`day-${String(day)}`}
                     checked={schedule[day].enabled}
                     onChange={() => toggleDayEnabled(day)}
                   />
-                  <span className="day-name">{day.charAt(0).toUpperCase() + day.slice(1)}</span>
+                  <span className="day-name">{String(day).charAt(0).toUpperCase() + String(day).slice(1)}</span>
                 </label>
                 
                 {day !== 'monday' && schedule[day].enabled && (
@@ -117,7 +117,7 @@ const WorkSchedule: React.FC<WorkScheduleProps> = ({ schedule, onScheduleChange 
               
               {schedule[day].enabled && (
                 <div className="time-ranges">
-                  {schedule[day].timeRanges.map((timeRange, idx) => (
+                  {schedule[day].timeRanges.map((timeRange: TimeRange, idx: number) => (
                     <div key={idx} className="time-range">
                       <div className="time-inputs">
                         <input
