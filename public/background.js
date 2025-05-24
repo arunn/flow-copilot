@@ -139,9 +139,14 @@ chrome.notifications.onClicked.addListener((notificationId) => {
   if (notificationId === 'focus-co-pilot-inactivity-alert') {
     // Clear the notification
     chrome.notifications.clear(notificationId);
-    // Open the popup
-    chrome.action.openPopup().catch((error) => {
-      console.error('Failed to open popup from notification click:', error);
+    chrome.storage.local.set({ showInactivityAlert: false });
+    // Open the browser window if it's not already open
+    chrome.windows.getCurrent((window) => {
+      if (window.state === 'minimized') {
+        chrome.windows.update(window.id, { state: 'normal', focused: true }, (_updatedWindow) => {
+          chrome.action.openPopup();
+        });
+      }
     });
   }
 });
@@ -326,7 +331,7 @@ function checkAndTriggerInactivityAlert() {
         if (isWorkingHours) {
           // Set a flag to show the alert in the popup
           chrome.storage.local.set({ showInactivityAlert: true });
-          
+
           // Open the popup to show the alert
           // Check if browser window is active before opening popup
           chrome.windows.getCurrent((window) => {
@@ -338,7 +343,6 @@ function checkAndTriggerInactivityAlert() {
         }
       }
     }
-    console.log('checkAndTriggerInactivityAlert 9');
     // Schedule the next alert regardless
     scheduleNextInactivityAlert();
   });
@@ -356,9 +360,6 @@ function showNotification() {
     }, (notificationId) => {
       if (chrome.runtime.lastError) {
         console.error('Notification creation failed:', chrome.runtime.lastError);
-      } else {
-        console.log('Notification created successfully:', notificationId);
-        chrome.storage.local.set({ showInactivityAlert: false });
       }
     });
   } catch (error) {
