@@ -91,7 +91,7 @@ const WorkSchedule: React.FC<WorkScheduleProps> = ({ schedule, onScheduleChange 
             Set your work days and time periods. This helps you plan your Pomodoro sessions.
           </p>
           
-          {(Object.keys(schedule) as Array<keyof WeekSchedule>).map((day) => (
+          {(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as Array<keyof WeekSchedule>).map((day) => (
             <div key={String(day)} className="day-schedule">
               <div className="day-header">
                 <label htmlFor={`day-${String(day)}`} className="day-label">

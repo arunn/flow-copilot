@@ -3,7 +3,7 @@
   "name": "FlowCoPilot",
   "description": "Your intelligent companion for focused work sessions. Seamlessly manage your work-break cycles with this smart Pomodoro timer.",
   "version": "1.2.0",
-  "permissions": ["storage", "alarms", "offscreen"],
+  "permissions": ["storage", "alarms", "offscreen", "notifications"],
   "action": {
     "default_popup": "index.html",
     "default_icon": {

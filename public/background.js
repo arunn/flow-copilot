@@ -134,6 +134,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   return false;
 });
 
+// Handle notification clicks
+chrome.notifications.onClicked.addListener((notificationId) => {
+  if (notificationId === 'focus-co-pilot-inactivity-alert') {
+    // Clear the notification
+    chrome.notifications.clear(notificationId);
+    // Open the popup
+    chrome.action.openPopup().catch((error) => {
+      console.error('Failed to open popup from notification click:', error);
+    });
+  }
+});
+
 /* ********** End of Offscreen & Audio Section ********** */
 
 
@@ -316,14 +328,43 @@ function checkAndTriggerInactivityAlert() {
           chrome.storage.local.set({ showInactivityAlert: true });
           
           // Open the popup to show the alert
-          chrome.action.openPopup();
+          // Check if browser window is active before opening popup
+          chrome.windows.getCurrent((window) => {
+            chrome.action.openPopup().catch((error) => {
+              console.error('Failed to open popup:', error);
+              // Fallback to notification if popup fails
+              showNotification();
+            });
+          });
         }
       }
     }
-    
+    console.log('checkAndTriggerInactivityAlert 9');
     // Schedule the next alert regardless
     scheduleNextInactivityAlert();
   });
+}
+
+// Helper function to show notification with proper error handling
+function showNotification() {
+  try {
+    chrome.notifications.create('focus-co-pilot-inactivity-alert', {
+      type: 'basic',
+      iconUrl: 'icons/logo.png',
+      title: 'Focus Co-Pilot Inactivity Alert',
+      message: "You've been inactive for a while. Start your work session now!",
+      priority: 2
+    }, (notificationId) => {
+      if (chrome.runtime.lastError) {
+        console.error('Notification creation failed:', chrome.runtime.lastError);
+      } else {
+        console.log('Notification created successfully:', notificationId);
+        chrome.storage.local.set({ showInactivityAlert: false });
+      }
+    });
+  } catch (error) {
+    console.error('Error creating notification:', error);
+  }
 }
 
 // Helper function to check if current time is within work schedule
