@@ -331,7 +331,6 @@ function checkAndTriggerInactivityAlert() {
           // Check if browser window is active before opening popup
           chrome.windows.getCurrent((window) => {
             chrome.action.openPopup().catch((error) => {
-              console.error('Failed to open popup:', error);
               // Fallback to notification if popup fails
               showNotification();
             });
