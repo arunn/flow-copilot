@@ -134,6 +134,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   return false;
 });
 
+// Handle notification clicks
+chrome.notifications.onClicked.addListener((notificationId) => {
+  if (notificationId === 'focus-co-pilot-inactivity-alert') {
+    // Clear the notification
+    chrome.notifications.clear(notificationId);
+    chrome.storage.local.set({ showInactivityAlert: false });
+    // Open the browser window if it's not already open
+    chrome.windows.getCurrent((window) => {
+      if (window.state === 'minimized') {
+        chrome.windows.update(window.id, { state: 'normal', focused: true }, (_updatedWindow) => {
+          chrome.action.openPopup();
+        });
+      }
+    });
+  }
+});
+
 /* ********** End of Offscreen & Audio Section ********** */
 
 
@@ -156,6 +173,9 @@ chrome.runtime.onInstalled.addListener(() => {
       previousTimeLeft = newTimeLeft;
     }
   });
+  
+  // Set up random alerts alarm
+  setupBlockingAlerts();
 });
 
 // Listen for timer updates from popup
@@ -247,11 +267,126 @@ chrome.alarms.onAlarm.addListener((alarm) => {
           previousTimeLeft = newTimeLeft;
         }
       }
-      else {
-        disableBadge();
-      }
     });
+  } else if (alarm.name === 'inactivityAlert') {
+    // Check if we should show an alert
+    checkAndTriggerInactivityAlert();
   }
-}); 
+});
 
 /* ********** End of Timer Section ********** */
+
+
+/* ********** Blocking Alerts Section ********** */
+
+// Set up random alerts with random intervals between 5-15 minutes
+function setupBlockingAlerts() {
+  // Create initial alarm
+  scheduleNextInactivityAlert();
+  
+  // Store default alert settings if not already set
+  chrome.storage.local.get(['alertSettings'], (result) => {
+    if (!result.alertSettings) {
+      chrome.storage.local.set({
+        alertSettings: {
+          enabled: true,
+          minInterval: 5, // minimum 5 minutes
+          maxInterval: 15 // maximum 15 minutes
+        }
+      });
+    }
+  });
+}
+
+// Schedule the next random alert
+function scheduleNextInactivityAlert() {
+  chrome.storage.local.get(['alertSettings'], (result) => {
+    // Default values if settings don't exist
+    const minInterval = result.alertSettings?.minInterval || 5;
+    const maxInterval = result.alertSettings?.maxInterval || 15;
+    const enabled = result.alertSettings?.enabled !== false;
+    
+    if (enabled) {
+      // Calculate a random interval between min and max (in minutes)
+      const randomInterval = Math.random() * (maxInterval - minInterval) + minInterval;
+      
+      // Clear any existing alarm
+      chrome.alarms.clear('inactivityAlert', () => {
+        // Create a new alarm with the random interval
+        chrome.alarms.create('inactivityAlert', { delayInMinutes: randomInterval });
+      });
+    }
+  });
+}
+
+// Check conditions and trigger alert if needed
+function checkAndTriggerInactivityAlert() {
+  chrome.storage.local.get(['timerState', 'settings'], (result) => {
+    // Only show alert if timer is not running
+    if (!result.timerState || !result.timerState.isRunning) {
+      // Check if current time is within work schedule
+      const schedule = result.settings?.schedule;
+      if (schedule) {
+        const isWorkingHours = isWithinWorkSchedule(schedule);
+        if (isWorkingHours) {
+          // Set a flag to show the alert in the popup
+          chrome.storage.local.set({ showInactivityAlert: true });
+
+          // Open the popup to show the alert
+          // Check if browser window is active before opening popup
+          chrome.windows.getCurrent((window) => {
+            chrome.action.openPopup().catch((error) => {
+              // Fallback to notification if popup fails
+              showNotification();
+            });
+          });
+        }
+      }
+    }
+    // Schedule the next alert regardless
+    scheduleNextInactivityAlert();
+  });
+}
+
+// Helper function to show notification with proper error handling
+function showNotification() {
+  try {
+    chrome.notifications.create('focus-co-pilot-inactivity-alert', {
+      type: 'basic',
+      iconUrl: 'icons/logo.png',
+      title: 'Focus Co-Pilot Inactivity Alert',
+      message: "You've been inactive for a while. Start your work session now!",
+      priority: 2
+    }, (notificationId) => {
+      if (chrome.runtime.lastError) {
+        console.error('Notification creation failed:', chrome.runtime.lastError);
+      }
+    });
+  } catch (error) {
+    console.error('Error creating notification:', error);
+  }
+}
+
+// Helper function to check if current time is within work schedule
+function isWithinWorkSchedule(schedule) {
+  const now = new Date();
+  const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  const dayOfWeek = days[now.getDay()];
+  
+  // Check if the current day is enabled in the schedule
+  const daySchedule = schedule[dayOfWeek];
+  if (!daySchedule || !daySchedule.enabled) {
+    return false;
+  }
+  
+  // Check if current time is within any of the time ranges for today
+  const hours = now.getHours().toString().padStart(2, '0');
+  const minutes = now.getMinutes().toString().padStart(2, '0');
+  const currentTime = `${hours}:${minutes}`;
+  
+  return daySchedule.timeRanges.some((range) => {
+    return currentTime >= range.startTime && currentTime <= range.endTime;
+  });
+}
+
+/* ********** End of Blocking Alerts Section ********** */

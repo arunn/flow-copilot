@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './Pomodoro.css';
+import BlockingAlert from './BlockingAlert';
+import { getRandomAlertMessage } from '../utils/scheduleUtils';
 
 interface TimerState {
   timeLeft: number;
@@ -12,12 +14,14 @@ interface Settings {
   workTime: number;
   breakTime: number;
   soundEnabled: boolean; // Sound enabled setting
+  schedule?: any; // Work schedule
 }
 
+const DEFAULT_WORK_TIME = 25 * 60; // 25 minutes in seconds
+const DEFAULT_BREAK_TIME = 5 * 60; // 5 minutes in seconds
+
+
 const Pomodoro: React.FC = () => {
-  const DEFAULT_WORK_TIME = 25 * 60; // 25 minutes in seconds
-  const DEFAULT_BREAK_TIME = 5 * 60; // 5 minutes in seconds
-  
   const [workTime, setWorkTime] = useState(DEFAULT_WORK_TIME);
   const [breakTime, setBreakTime] = useState(DEFAULT_BREAK_TIME);
   const [timeLeft, setTimeLeft] = useState<number | null>(null); // Initialize as null
@@ -25,15 +29,16 @@ const Pomodoro: React.FC = () => {
   const [isWorkTime, setIsWorkTime] = useState(true);
   const [isLoading, setIsLoading] = useState(true); // Add loading state
   const [soundEnabled, setSoundEnabled] = useState(true); // Sound enabled by default
+  const [showInactivityAlert, setShowInactivityAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
 
   // Load saved settings and state when component mounts
   useEffect(() => {
     setIsLoading(true);
-    chrome.storage.local.get(['settings', 'timerState'], (result) => {
+    chrome.storage.local.get(['settings', 'timerState', 'showInactivityAlert'], (result) => {
       // Load settings if available
       let newWorkTime = DEFAULT_WORK_TIME;
       let newBreakTime = DEFAULT_BREAK_TIME;
-      let newSoundEnabled = true;
       
       if (result.settings) {
         const settings: Settings = result.settings;
@@ -77,8 +82,34 @@ const Pomodoro: React.FC = () => {
         setIsRunning(false);
       }
       
+      // Check for inactivity alert
+      if (result.showInactivityAlert) {
+        setAlertMessage(getRandomAlertMessage());
+        setShowInactivityAlert(true);
+        // Clear the flag immediately
+        chrome.storage.local.set({ showInactivityAlert: false });
+      }
+      
       setIsLoading(false);
     });
+  }, []);
+
+  // Listen for inactivity alerts from background
+  useEffect(() => {
+    const handleStorageChange = (changes: { [key: string]: chrome.storage.StorageChange }) => {
+      if (changes.showInactivityAlert && changes.showInactivityAlert.newValue === true) {
+        setAlertMessage(getRandomAlertMessage());
+        setShowInactivityAlert(true);
+        // Clear the flag immediately
+        chrome.storage.local.set({ showInactivityAlert: false });
+      }
+    };
+    
+    chrome.storage.onChanged.addListener(handleStorageChange);
+    
+    return () => {
+      chrome.storage.onChanged.removeListener(handleStorageChange);
+    };
   }, []);
 
   useEffect(() => {
@@ -210,13 +241,25 @@ const Pomodoro: React.FC = () => {
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
+  const handleAlertClose = () => {
+    setShowInactivityAlert(false);
+    // Start work timer when alert is closed
+    handleRestartWork();
+  };
+
   return (
     <div className="pomodoro-container">
+      {showInactivityAlert && (
+        <BlockingAlert 
+          onClose={handleAlertClose} 
+          message={alertMessage} 
+        />
+      )}
       {isLoading ? (
         <div>Loading timer...</div>
       ) : (
         <>
-          <h2>{isWorkTime ? 'Work Time' : 'Break Time'}</h2>
+          <h2>{isWorkTime ? "You're Working" : "You're on Break"}</h2>
           <div className="timer">{formatTime(timeLeft || 0)}</div>
           <div className="controls">
             <button 
@@ -231,19 +274,19 @@ const Pomodoro: React.FC = () => {
               disabled={!isRunning}
               className="stop-button"
             >
-              STOP
+              PAUSE
             </button>
             <button 
               onClick={handleRestartWork}
               className="restart-work-button"
             >
-              RESTART WORK
+              FORCE WORK
             </button>
             <button 
               onClick={handleRestartBreak}
               className="restart-break-button"
             >
-              RESTART BREAK
+              FORCE BREAK
             </button>
           </div>
         </>
